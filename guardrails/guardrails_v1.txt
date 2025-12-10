@@ -1,0 +1,129 @@
+# ============================================
+# EC2 Instance Guardrails
+# ============================================
+
+Resource Type: aws_instance
+Rule ID: EC2-001
+Rule: Must use approved AMIs (e.g., hardened or CIS-compliant)
+Severity: High
+Compliance Check: AMI ID must match approved list or contain "cis" or "hardened" in description
+
+Resource Type: aws_instance
+Rule ID: EC2-002
+Rule: Must have IMDSv2 enabled
+Severity: High
+Compliance Check: metadata_options.http_tokens must be "required"
+
+Resource Type: aws_instance
+Rule ID: EC2-003
+Rule: Must have termination protection enabled
+Severity: Medium
+Compliance Check: disable_api_termination must be true
+
+Resource Type: aws_instance
+Rule ID: EC2-004
+Rule: Must have detailed monitoring enabled
+Severity: Medium
+Compliance Check: monitoring must be true
+
+Resource Type: aws_instance
+Rule ID: EC2-005
+Rule: Must have EBS volumes encrypted
+Severity: High
+Compliance Check: root_block_device.encrypted must be true
+
+Resource Type: aws_instance
+Rule ID: EC2-006
+Rule: Must have tags for Owner and Environment
+Severity: Low
+Compliance Check: tags must include keys "Owner" and "Environment"
+
+# ============================================
+# Security Group Guardrails
+# ============================================
+
+Resource Type: aws_security_group
+Rule ID: SG-001
+Rule: Must not allow 0.0.0.0/0 on ports 22 or 3389
+Severity: High
+Compliance Check: ingress.cidr_blocks must not contain 0.0.0.0/0 for ports 22 or 3389
+
+Resource Type: aws_security_group
+Rule ID: SG-002
+Rule: Must restrict ingress to approved CIDR ranges
+Severity: High
+Compliance Check: ingress.cidr_blocks must match approved ranges
+
+Resource Type: aws_security_group
+Rule ID: SG-003
+Rule: Must have egress restricted to approved ranges
+Severity: Medium
+Compliance Check: egress.cidr_blocks must match approved ranges
+
+# ============================================
+# Load Balancer Guardrails
+# ============================================
+
+Resource Type: aws_lb
+Rule ID: LB-001
+Rule: Must be internal if not internet-facing
+Severity: Medium
+Compliance Check: internal must be true unless explicitly internet-facing
+
+Resource Type: aws_lb
+Rule ID: LB-002
+Rule: Must have access logs enabled
+Severity: High
+Compliance Check: access_logs.enabled must be true
+
+Resource Type: aws_lb
+Rule ID: LB-003
+Rule: Must have deletion protection enabled
+Severity: Medium
+Compliance Check: enable_deletion_protection must be true
+
+Resource Type: aws_lb
+Rule ID: LB-004
+Rule: Must use TLS listeners with approved policies
+Severity: High
+Compliance Check: listener.ssl_policy must be from approved list
+
+Resource Type: aws_lb
+Rule ID: LB-005
+Rule: Must have tags for Owner and Environment
+Severity: Low
+Compliance Check: tags must include keys "Owner" and "Environment"
+
+# ============================================
+# S3 Bucket Guardrails
+# ============================================
+
+Resource Type: aws_s3_bucket
+Rule ID: S3-001
+Rule: Must have versioning enabled
+Severity: Medium
+Compliance Check: versioning.enabled must be true
+
+Resource Type: aws_s3_bucket
+Rule ID: S3-002
+Rule: Must have encryption enabled
+Severity: High
+Compliance Check: server_side_encryption_configuration must be present
+
+Resource Type: aws_s3_bucket
+Rule ID: S3-003
+Rule: Must block public access
+Severity: High
+Compliance Check: block_public_acls and block_public_policy must be true
+
+Resource Type: aws_s3_bucket
+Rule ID: S3-004
+Rule: Must enable access logging
+Severity: Medium
+Compliance Check: logging.target_bucket must be set
+
+Resource Type: aws_s3_bucket
+Rule ID: S3-005
+Rule: Must have tags for Owner and Environment
+Severity: Low
+Compliance Check: tags must include keys "Owner" and "Environment"
