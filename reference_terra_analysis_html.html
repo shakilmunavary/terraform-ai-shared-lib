@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en"> 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terraform Plan Analysis Report</title>
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --success: #27ae60;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 30px;
+            background: var(--primary);
+            color: white;
+            border-radius: 10px 10px 0 0;
+        }
+        h1, h2, h3 {
+            color: var(--dark);
+        }
+        h1 {
+            margin-bottom: 10px;
+        }
+        .section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        .section-title {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.9em;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: var(--primary);
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #e9e9e9;
+        }
+        .status-create {
+            color: var(--success);
+            font-weight: bold;
+        }
+        .status-update {
+            color: var(--warning);
+            font-weight: bold;
+        }
+        .status-delete {
+            color: var(--danger);
+            font-weight: bold;
+        }
+        .cost-summary {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .cost-card {
+            flex: 1;
+            min-width: 200px;
+            margin: 10px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .cost-card h3 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+        .cost-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--dark);
+        }
+        .recommendation {
+            background: #fffde7;
+            padding: 15px;
+            border-left: 5px solid var(--warning);
+            margin: 20px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        .recommendation h4 {
+            margin-top: 0;
+            color: var(--danger);
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+            font-size: 0.8em;
+            border-top: 1px solid #eee;
+        }
+        .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin-right: 5px;
+            background: var(--light);
+            color: var(--dark);
+        }
+        .high-cost {
+            color: var(--danger);
+            font-weight: bold;
+        }
+        .medium-cost {
+            color: var(--warning);
+            font-weight: bold;
+        }
+        .low-cost {
+            color: var(--success);
+            font-weight: bold;
+        }
+        .pass {
+            color: var(--success);
+            font-weight: bold;
+        }
+        .fail {
+            color: var(--danger);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Terraform Plan Analysis Report</h1>
+            <p>Generated on 2025-08-27 | Region: us-east-1</p>
+        </header>
+
+        <div class="section">
+            <h2 class="section-title">1. Infrastructure Changes Overview</h2>
+            <p>This plan will create 9 new resources across your AWS infrastructure. Below is a detailed breakdown of all changes:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Resource Name</th>
+                        <th>Type</th>
+                        <th>Action</th>
+                        <th>Key Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>aws_instance.app_server</td>
+                        <td>aws_instance</td>
+                        <td class="status-create">Create</td>
+                        <td>
+                            <ul>
+                                <li>Instance type: t2.micro</li>
+                                <li>AMI: ami-0c55b159cbfafe1f0 (Ubuntu)</li>
+                                <li>Security Group: aws_security_group.ec2_sg (Allows inbound traffic on port 22)</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>aws_lb.app_lb</td>
+                        <td>aws_lb</td>
+                        <td class="status-create">Create</td>
+                        <td>
+                            <ul>
+                                <li>Load Balancer Type: application</li>
+                                <li>Name: app-load-balancer</li>
+                                <li>Internal: false</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>aws_lb_listener.http</td>
+                        <td>aws_lb_listener</td>
+                        <td class="status-create">Create</td>
+                        <td>
+                            <ul>
+                                <li>Port: 80</li>
+                                <li>Protocol: HTTP</li>
+                                <li>Default Action: forward to aws_lb_target_group.app_tg</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>aws_lb_target_group.app_tg</td>
+                        <td>aws_lb_target_group</td>
+                        <td class="status-create">Create</td>
+                        <td>
+                            <ul>
+                                <li>Name: app-target-group</li>
+                                <li>Port: 80</li>
+                                <li>Protocol: HTTP</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>aws_lb_target_group_attachment.attach</td>
+                        <td>aws_lb_target_group_attachment</td>
+                        <td class="status-create">Create</td>
+                        <td>
+                            <ul>
+                                <li>Attaches aws_instance.app_server to aws_lb_target_group.app_tg</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>aws_security_group.alb_sg</td>
+                        <td>aws_security_group</td>
+                        <td class="status-create">Create</td>
+                        <td>
+                            <ul>
+                                <li>Description: Managed by Terraform</li>
+                                <li>Ingress Rule: TCP on port 80 from CIDR 10.0.1.43/32</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>aws_security_group.ec2_sg</td>
+                        <td>aws_security_group</td>
+                        <td class="status-create">Create</td>
+                        <td>
+                            <ul>
+                                <li>Description: Managed by Terraform</li>
+                                <li>Ingress Rule: TCP on port 22 from CIDR 10.0.1.40/32</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>aws_subnet.public</td>
+                        <td>aws_subnet</td>
+                        <td class="status-create">Create</td>
+                        <td>
+                            <ul>
+                                <li>CIDR Block: 10.0.1.0/24</li>
+                                <li>map_public_ip_on_launch: true</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>aws_vpc.main</td>
+                        <td>aws_vpc</td>
+                        <td class="status-create">Create</td>
+                        <td>
+                            <ul>
+                                <li>CIDR Block: 10.0.0.0/16</li>
+                                <li>enable_dns_support: true</li>
+                            </ul>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">2. Terraform Code Recommendations</h2>
+            <div class="recommendation">
+                <ol>
+                    <li><strong>Variable Usage:</strong>
+                        <ul>
+                            <li>The plan uses hardcoded CIDR blocks (10.0.1.43/32, 10.0.1.40/32) for security group ingress rules. It is recommended to use variables or data sources for these values to make the code more reusable and dynamic.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Resource Naming:</strong>
+                        <ul>
+                            <li>Some resources are using default or generic names. It is a best practice to use meaningful names with a consistent naming convention.</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">3. Security and Compliance Recommendations</h2>
+            <div class="recommendation">
+                <h4>Security Warning:</h4>
+                <p>The current configuration has several security risks:</p>
+                <ol>
+                    <li>The <strong>EC2 instance</strong> is created without an associated public IP, but it is placed in a subnet with `map_public_ip_on_launch = true`. This is a misconfiguration and can lead to unintended public exposure.</li>
+                    <li>The security group `aws_security_group.ec2_sg` allows SSH access (port 22) from a specific CIDR block. While not 0.0.0.0/0, it's a good practice to use a more specific IP, or even better, use AWS Session Manager instead of direct SSH.</li>
+                    <li>The security group `aws_security_group.alb_sg` allows traffic on port 80 (HTTP). While it is from a specific CIDR, it is best practice to use HTTPS (port 443) for all public-facing applications.</li>
+                    <li>The Load Balancer `aws_lb.app_lb` is being created, but there are no guardrails in place for it like `enable_deletion_protection` being set to `true` or being deployed in multiple Availability Zones.</li>
+                    <li>The `aws_instance.app_server` is missing essential tags such as "Owner", "Environment", and "CostCenter", which is a compliance failure.</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">4. Guardrails Compliance</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Resource Name</th>
+                        <th>Guardrail Element</th>
+                        <th>Status</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>aws_instance.app_server</td>
+                        <td>EC2 instances must use approved AMIs.</td>
+                        <td class="pass">PASS</td>
+                        <td>The AMI `ami-0c55b159cbfafe1f0` is used, which is considered an approved Ubuntu AMI.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_instance.app_server</td>
+                        <td>EC2 instances must have IMDSv2 enabled.</td>
+                        <td class="fail">FAIL</td>
+                        <td>IMDSv2 is not explicitly enabled. It is recommended to use `metadata_options { http_tokens = "required" }`.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_instance.app_server</td>
+                        <td>EC2 instances must not use public IP unless explicitly required.</td>
+                        <td class="pass">PASS</td>
+                        <td>The `associate_public_ip_address` is set to `false`.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_instance.app_server</td>
+                        <td>EC2 instances must be launched in private subnets unless justified.</td>
+                        <td class="fail">FAIL</td>
+                        <td>The instance is launched in `aws_subnet.public` which has `map_public_ip_on_launch = true`.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_instance.app_server</td>
+                        <td>EC2 instances must have termination protection enabled.</td>
+                        <td class="fail">FAIL</td>
+                        <td>`disable_api_termination` is not set to `true`.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_instance.app_server</td>
+                        <td>EC2 instances must be tagged with "Owner", "Environment", and "CostCenter".</td>
+                        <td class="fail">FAIL</td>
+                        <td>The `tags` attribute is not present in the plan.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_lb.app_lb</td>
+                        <td>Load Balancers must use TLS 1.2 or higher.</td>
+                        <td class="fail">FAIL</td>
+                        <td>The listener `aws_lb_listener.http` uses `protocol = "HTTP"`. It should be `HTTPS` with a secure SSL policy.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_lb.app_lb</td>
+                        <td>Load Balancers must have access logs enabled.</td>
+                        <td class="fail">FAIL</td>
+                        <td>`access_logs` are not enabled in the plan.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_lb.app_lb</td>
+                        <td>Load Balancers must not expose ports other than 443 and 80 unless justified.</td>
+                        <td class="pass">PASS</td>
+                        <td>The plan exposes only port 80.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_lb.app_lb</td>
+                        <td>Load Balancers must use secure SSL certificates from trusted issuers.</td>
+                        <td class="fail">FAIL</td>
+                        <td>No SSL certificate is configured for the listener.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_lb.app_lb</td>
+                        <td>Load Balancers must be deployed in multiple AZs for high availability.</td>
+                        <td class="fail">FAIL</td>
+                        <td>The plan only uses one subnet `aws_subnet.public`. A second subnet in a different AZ should be added.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_security_group.ec2_sg</td>
+                        <td>Security Groups must not allow 0.0.0.0/0 on ports 22, 3389, or 80 unless explicitly required.</td>
+                        <td class="pass">PASS</td>
+                        <td>The ingress rule for port 22 is restricted to a CIDR `10.0.1.40/32`, not `0.0.0.0/0`.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_security_group.ec2_sg</td>
+                        <td>Security Groups must have descriptions for all rules.</td>
+                        <td class="fail">FAIL</td>
+                        <td>The ingress rule in `aws_security_group.ec2_sg` has an empty description.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_security_group.alb_sg</td>
+                        <td>Security Groups must not allow 0.0.0.0/0 on ports 22, 3389, or 80 unless explicitly required.</td>
+                        <td class="pass">PASS</td>
+                        <td>The ingress rule for port 80 is restricted to a CIDR `10.0.1.43/32`, not `0.0.0.0/0`.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_security_group.alb_sg</td>
+                        <td>Security Groups must have descriptions for all rules.</td>
+                        <td class="fail">FAIL</td>
+                        <td>The ingress rule in `aws_security_group.alb_sg` has an empty description.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_security_group.ec2_sg</td>
+                        <td>Security Groups must be scoped to least privilege.</td>
+                        <td class="pass">PASS</td>
+                        <td>The rule is scoped to a specific CIDR, not 0.0.0.0/0.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_security_group.alb_sg</td>
+                        <td>Security Groups must be scoped to least privilege.</td>
+                        <td class="pass">PASS</td>
+                        <td>The rule is scoped to a specific CIDR, not 0.0.0.0/0.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">5. Overall Status</h2>
+            <div class="recommendation">
+                <h3>Overall Compliance: 47.06%</h3>
+            </div>
+            <div class="recommendation">
+                <h3>Overall Pipeline Status: FAIL</h3>
+            </div>
+        </div>
+        <footer>
+            <p>Terraform Plan Analysis Report | Generated using Terraform 1.13.0</p>
+            <p>Note: Compliance is based on a predefined set of guardrails.</p>
+        </footer>
+    </div>
+</body>
+</html>
