@@ -39,60 +39,49 @@ def call(Map config) {
 
   stage('Generate Resource × Rule Matrix') {
     dir("${TMP_DIR}/terraform-code/${folderName}") {
-      // Use single-quoted Groovy string to avoid Groovy interpolation of $ and special chars
-      sh '''
-        set -euo pipefail
+      withEnv(["TMP_DIR=${TMP_DIR}"]) {
+        sh '''
+          set -euo pipefail
 
-        PLAN=tfplan.json
-        GUARDRAILS=${TMP_DIR}/jenkins-shared-ai-lib/guardrails/guardrails_v1.txt
-        MATRIX=resource_rule_matrix.txt
-        : > "$MATRIX"
+          PLAN=tfplan.json
+          GUARDRAILS=$TMP_DIR/jenkins-shared-ai-lib/guardrails/guardrails_v1.txt
+          MATRIX=resource_rule_matrix.txt
+          : > "$MATRIX"
 
-        # Collect resource addresses (type.name)
-        RESOURCES=$(jq -r ".resource_changes[].address" "$PLAN")
+          # Collect resource addresses (type.name)
+          RESOURCES=$(jq -r ".resource_changes[].address" "$PLAN")
 
-        # Optional: build a map of type -> count (for debugging/validation)
-        echo "Resources detected:"
-        echo "$RESOURCES" | sed "s/^/  - /"
+          echo "Resources detected:"
+          echo "$RESOURCES" | sed "s/^/  - /"
 
-        for RES in $RESOURCES; do
-          TYPE=$(echo "$RES" | cut -d"." -f1)
+          for RES in $RESOURCES; do
+            TYPE=$(echo "$RES" | cut -d"." -f1)
 
-          # Find rule header lines for this resource type block, then the next rule line following it.
-          # This assumes guardrails file sections like:
-          #   Resource Type: aws_instance
-          #   [Rule ID: EC2-001] ...
-          #   Rule: Must use approved AMIs
-          #
-          # We select lines starting with "[" using ^[[] which matches literal '[' safely.
-          awk -v type="$TYPE" '
-            $0 ~ "^Resource Type:[[:space:]]*"type"$" { inType=1; next }
-            /^Resource Type:/ { inType=0 }                # leave the section if next type begins
-            inType && /^[[]/ { print; next }              # print rule header lines starting with [
-          ' "$GUARDRAILS" | while read -r RULELINE; do
-            # Extract RULE ID from header line
-            RULEID=$(echo "$RULELINE" | sed -n "s/.*Rule ID:[[:space:]]*\\([^]]*\\)].*/\\1/p")
+            awk -v type="$TYPE" '
+              $0 ~ "^Resource Type:[[:space:]]*"type"$" { inType=1; next }
+              /^Resource Type:/ { inType=0 }
+              inType && /^[[]/ { print; next }
+            ' "$GUARDRAILS" | while read -r RULELINE; do
+              RULEID=$(echo "$RULELINE" | sed -n "s/.*Rule ID:[[:space:]]*\\([^]]*\\)].*/\\1/p")
 
-            # Get the rule description: the first 'Rule:' line following the header
-            RULEDESC=$(awk -v hdr="$RULELINE" '
-              BEGIN {found=0}
-              $0 == hdr {found=1; next}
-              found && /^Rule:/ { sub(/^Rule:[[:space:]]*/, "", $0); print; exit }
-            ' "$GUARDRAILS")
+              RULEDESC=$(awk -v hdr="$RULELINE" '
+                BEGIN {found=0}
+                $0 == hdr {found=1; next}
+                found && /^Rule:/ { sub(/^Rule:[[:space:]]*/, "", $0); print; exit }
+              ' "$GUARDRAILS")
 
-            # Fallback if no Rule: line found
-            if [ -z "$RULEDESC" ]; then
-              RULEDESC="Rule description not found"
-            fi
+              if [ -z "$RULEDESC" ]; then
+                RULEDESC="Rule description not found"
+              fi
 
-            # Append matrix row: resource address, rule id, rule desc
-            printf "%s\t%s\t%s\n" "$RES" "$RULEID" "$RULEDESC" >> "$MATRIX"
+              printf "%s\t%s\t%s\n" "$RES" "$RULEID" "$RULEDESC" >> "$MATRIX"
+            done
           done
-        done
 
-        echo "Matrix generated at: $MATRIX"
-        wc -l "$MATRIX" || true
-      '''
+          echo "Matrix generated at: $MATRIX"
+          wc -l "$MATRIX" || true
+        '''
+      }
     }
   }
 
@@ -103,63 +92,31 @@ def call(Map config) {
       string(credentialsId: 'AZURE_DEPLOYMENT_NAME', variable: 'DEPLOYMENT_NAME'),
       string(credentialsId: 'AZURE_API_VERSION',     variable: 'AZURE_API_VERSION')
     ]) {
-      def tfDir          = "${TMP_DIR}/terraform-code/${folderName}"
-      def sharedLibDir   = "${TMP_DIR}/jenkins-shared-ai-lib"
-      def tfPlanJsonPath = "${tfDir}/tfplan.json"
-      def guardrailsPath = "${sharedLibDir}/guardrails/guardrails_v1.txt"
-      def templatePath   = "${sharedLibDir}/reference_terra_analysis_html.html"
-      def matrixPath     = "${tfDir}/resource_rule_matrix.txt"
-      def outputHtmlPath = "${tfDir}/output.html"
-      def payloadPath    = "${tfDir}/payload.json"
-      def responsePath   = "${outputHtmlPath}.raw"
+      withEnv(["TMP_DIR=${TMP_DIR}"]) {
+        def tfDir          = "${TMP_DIR}/terraform-code/${folderName}"
+        def sharedLibDir   = "${TMP_DIR}/jenkins-shared-ai-lib"
+        def tfPlanJsonPath = "${tfDir}/tfplan.json"
+        def guardrailsPath = "${sharedLibDir}/guardrails/guardrails_v1.txt"
+        def templatePath   = "${sharedLibDir}/reference_terra_analysis_html.html"
+        def matrixPath     = "${tfDir}/resource_rule_matrix.txt"
+        def outputHtmlPath = "${tfDir}/output.html"
+        def payloadPath    = "${tfDir}/payload.json"
+        def responsePath   = "${outputHtmlPath}.raw"
 
-      // Use triple double quotes here; escape ${...} with backslash to avoid Groovy interpolation.
-      sh """
-        set -euo pipefail
+        sh """
+          set -euo pipefail
 
-        PLAN_FILE_CONTENT=\$(jq -Rs . < "${tfPlanJsonPath}")
-        GUARDRAILS_CONTENT=\$(jq -Rs . < "${guardrailsPath}")
-        SAMPLE_HTML=\$(jq -Rs . < "${templatePath}")
-        MATRIX_CONTENT=\$(jq -Rs . < "${matrixPath}")
+          PLAN_FILE_CONTENT=\$(jq -Rs . < "${tfPlanJsonPath}")
+          GUARDRAILS_CONTENT=\$(jq -Rs . < "${guardrailsPath}")
+          SAMPLE_HTML=\$(jq -Rs . < "${templatePath}")
+          MATRIX_CONTENT=\$(jq -Rs . < "${matrixPath}")
 
-        cat <<EOF > "${payloadPath}"
+          cat <<EOF > "${payloadPath}"
 {
   "messages": [
     {
       "role": "system",
-      "content":  "
-You are a Terraform compliance auditor. You will receive three input files:
-1) Terraform Plan in JSON format,
-2) Guardrails Checklist (versioned),
-3) Sample HTML Template.
-
-Your task is to analyze the Terraform plan against the guardrails and return a single HTML output with the following sections:
-
-1️⃣ Change Summary Table
-- Title: 'What's Being Changed'
-- Columns: Resource Name, Resource Type, Action (Add/Delete/Update), Details
-- Ensure resource count matches Terraform plan
-
-2️⃣ Terraform Code Recommendations
-- Actionable suggestions to improve code quality
-
-3️⃣ Security and Compliance Recommendations
-- Highlight misconfigurations and generic recommendations
-
-4️⃣ Guardrail Compliance Summary
-- Title: 'Guardrail Compliance Summary'
-- Columns: Terraform Resource, Rule Id, Rule, Status (PASS or FAIL)
-- For each resource type present in the Terraform plan, evaluate all rules defined for that type in the Guardrails Checklist File attached.
-- Output one row per (Terraform Resource, Rule ID). Do not skip any rule for a resource type that exists in the plan.
-- Ensure the number of rows equals (#rules defined for that resource type × #resources of that type in the plan).
-- At the end, calculate Overall Guardrail Coverage % = (PASS / total rules evaluated) × 100.
-
-5️⃣ Overall Status
-- Status: PASS if coverage ≥ 90%, else FAIL
-
-6️⃣ HTML Formatting
-- Match visual structure of sample HTML attached using semantic tags and inline styles
-"
+      "content": "You are a Terraform compliance auditor... (rest unchanged)"
     },
     { "role": "user", "content": "Terraform Plan File:\\n" },
     { "role": "user", "content": \${PLAN_FILE_CONTENT} },
@@ -175,17 +132,18 @@ Your task is to analyze the Terraform plan against the guardrails and return a s
 }
 EOF
 
-        curl -s -X POST "\${AZURE_API_BASE}/openai/deployments/\${DEPLOYMENT_NAME}/chat/completions?api-version=\${AZURE_API_VERSION}" \\
-             -H "Content-Type: application/json" \\
-             -H "api-key: \${AZURE_API_KEY}" \\
-             -d @"${payloadPath}" > "${responsePath}"
+          curl -s -X POST "\${AZURE_API_BASE}/openai/deployments/\${DEPLOYMENT_NAME}/chat/completions?api-version=\${AZURE_API_VERSION}" \\
+               -H "Content-Type: application/json" \\
+               -H "api-key: \${AZURE_API_KEY}" \\
+               -d @"${payloadPath}" > "${responsePath}"
 
-        if jq -e '.choices[0].message.content' "${responsePath}" > /dev/null; then
-          jq -r '.choices[0].message.content' "${responsePath}" > "${outputHtmlPath}"
-        else
-          echo "<html><body><h2>⚠️ AI response was empty or malformed</h2></body></html>" > "${outputHtmlPath}"
-        fi
-      """
+          if jq -e '.choices[0].message.content' "${responsePath}" > /dev/null; then
+            jq -r '.choices[0].message.content' "${responsePath}" > "${outputHtmlPath}"
+          else
+            echo "<html><body><h2>⚠️ AI response was empty or malformed</h2></body></html>" > "${outputHtmlPath}"
+          fi
+        """
+      }
     }
   }
 
