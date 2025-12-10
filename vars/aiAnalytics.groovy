@@ -44,7 +44,7 @@ def call(Map config) {
         set -euo pipefail
 
         PLAN=tfplan.json
-        GUARDRAILS=$TMP_DIR/jenkins-shared-ai-lib/guardrails/guardrails_v1.txt
+        GUARDRAILS=${TMP_DIR}/jenkins-shared-ai-lib/guardrails/guardrails_v1.txt
         MATRIX=resource_rule_matrix.txt
         : > "$MATRIX"
 
